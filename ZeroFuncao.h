@@ -15,6 +15,7 @@ typedef struct {
   real_t *p;
   int grau;
 } Polinomio;
+//COLOCA OQ CADA VARIAVEL FAZ
 
 // Métodos
 // Retornam valor do erro quando método finalizou. Este valor depende de tipoErro
