@@ -4,7 +4,7 @@
 
 #include "utils.h"
 #include "ZeroFuncao.h"
-
+//funcao polinomio
 int main ()
 {
 
