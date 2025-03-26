@@ -17,7 +17,8 @@ int main (){
 
   scanf("%lf %lf", &a, &b); // intervalo onde está uma das raizes.
   calcPolinomio_rapido(pol, a, &px, &dpx); // Calcula f(a) e f(b)
-  calcPolinomio_lento(pol, a,&px, &dpx );
+  calcPolinomio_lento(pol, a,&px, &dpx 
+  );
 
 
   // Restante do programa a partir daqui
