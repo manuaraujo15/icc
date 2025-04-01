@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -7,7 +9,7 @@
 /*  Retorna tempo em milisegundos
 
     Forma de uso:
- 
+
     double tempo;
     tempo = timestamp();
     <trecho de programa do qual se deseja medir tempo>

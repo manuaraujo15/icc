@@ -4,84 +4,55 @@
 #include "utils.h"
 #include "ZeroFuncao.h"
 
-// Retorna valor do erro quando método finalizou. Este valor depende de tipoErro
-real_t newtonRaphson (Polinomio p, real_t x0, int criterioParada, int *it, real_t *raiz){
-real_t px, dpx;
-    real_t erro = 1.0;
-    *it = 0;
-    
-    while (erro > criterioParada) {
-        calcPolinomio_rapido(p, x0, &px, &dpx); // Calcula valor e derivada
-        if (dpx == 0) {
-            // Evitar divisão por zero
-            return -1;
-        }
-        real_t x1 = x0 - px / dpx; // Fórmula de Newton-Raphson
-        erro = fabs(x1 - x0); // Erro absoluto
-        x0 = x1;
-        (*it)++;
+void calcPolinomio_rapido(Polinomio p, real_t x, real_t *px, real_t *dpx) {
+    *px = p.p[p.grau];
+    *dpx = 0.0;
+    for (int i = p.grau - 1; i >= 0; i--) {
+        *dpx = (*dpx) * x + (*px);
+        *px = (*px) * x + p.p[i];
     }
-    *raiz = x0;
-    return erro;
 }
 
-
-// Retorna valor do erro quando método finalizou. Este valor depende de tipoErro
-real_t bisseccao (Polinomio p, real_t a, real_t b, int criterioParada, int *it, real_t *raiz){
-    real_t fa, fb, c, fc;
-    *it = 0;
-    calcPolinomio_rapido(p, a, &fa, &fb); // Calcula f(a) e f(b)
-    
-    if (fa * fb > 0) {
-        return -1; // Não há garantia de raiz no intervalo [a, b]
-    }
-    
-    while ((b - a) > criterioParada) {
-        c = (a + b) / 2;
-        calcPolinomio_rapido(p, c, &fc, &fc); // Calcula f(c)
-        
-        if (fc == 0.0) {
-            *raiz = c;
-            return 0.0;
+void calcPolinomio_lento(Polinomio p, real_t x, real_t *px, real_t *dpx) {
+    *px = 0.0;
+    *dpx = 0.0;
+    for (int i = 0; i <= p.grau; i++) {
+        *px += p.p[i] * pow(x, i);
+        if (i > 0) {
+            *dpx += i * p.p[i] * pow(x, i - 1);
         }
-        
+    }
+}
+
+real_t bisseccao(Polinomio p, real_t a, real_t b, int criterioParada, int *it, real_t *raiz) {
+    real_t fa, fb, fc, c;
+    int iter = 0;
+    do {
+        c = (a + b) / 2;
+        calcPolinomio_rapido(p, a, &fa, &fc);
+        calcPolinomio_rapido(p, c, &fc, &fb);
         if (fa * fc < 0) {
             b = c;
         } else {
             a = c;
-            fa = fc;
         }
-        (*it)++;
-    }
-    
-    *raiz = (a + b) / 2;
-    return fabs(b - a);
+        iter++;
+    } while (fabs(b - a) > 1e-6 && iter < 500);
+    *raiz = c;
+    *it = iter;
+    return fabs(fc);
 }
 
-
-void calcPolinomio_rapido(Polinomio p, real_t x, real_t *px, real_t *dpx){
-    *px = 0.0;
-    *dpx = 0.0;
-    real_t potencia = 1.0;
-    
-    for (int i = 0; i <= p.grau; i++) {
-        *px += p.p[i] * potencia;
-        if (i > 0) {
-            *dpx += p.p[i] * i * potencia / x;
-        }
-        potencia *= x;
-    }
-}
-
-
-void calcPolinomio_lento(Polinomio p, real_t x, real_t *px, real_t *dpx){
-    *px = 0.0;
-    *dpx = 0.0;
-    
-    for (int i = 0; i <= p.grau; i++) {
-        *px += p.p[i] * pow(x, i);
-        if (i > 0) {
-            *dpx += p.p[i] * i * pow(x, i - 1);
-        }
-    }
+real_t newtonRaphson(Polinomio p, real_t x0, int criterioParada, int *it, real_t *raiz) {
+    real_t xk = x0, fx, dfx;
+    int iter = 0;
+    do {
+        calcPolinomio_rapido(p, xk, &fx, &dfx);
+        if (fabs(dfx) < DBL_EPSILON) break;
+        xk -= fx / dfx;
+        iter++;
+    } while (fabs(fx) > DBL_EPSILON && iter < 500);
+    *raiz = xk;
+    *it = iter;
+    return fabs(fx);
 }
