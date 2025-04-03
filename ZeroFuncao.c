@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "ZeroFuncao.h"
 
+// Implementação do cálculo rápido do polinômio
 void calcPolinomio_rapido(Polinomio p, real_t x, real_t *px, real_t *dpx) {
     *px = p.p[p.grau];
     *dpx = 0.0;
@@ -13,6 +14,7 @@ void calcPolinomio_rapido(Polinomio p, real_t x, real_t *px, real_t *dpx) {
     }
 }
 
+// Implementação do cálculo lento do polinômio
 void calcPolinomio_lento(Polinomio p, real_t x, real_t *px, real_t *dpx) {
     *px = 0.0;
     *dpx = 0.0;
@@ -24,35 +26,63 @@ void calcPolinomio_lento(Polinomio p, real_t x, real_t *px, real_t *dpx) {
     }
 }
 
-real_t bisseccao(Polinomio p, real_t a, real_t b, int criterioParada, int *it, real_t *raiz) {
-    real_t fa, fb, fc, c;
-    int iter = 0;
+// Implementação do método de Newton-Raphson
+real_t newtonRaphson(Polinomio p, real_t x0, int criterioParada, int *it, real_t *raiz, CalcPolinomioFunc calcPolinomio) {
+    real_t xk = x0, xk1, fx, dfx, erro;
+    *it = 0;
     do {
-        c = (a + b) / 2;
-        calcPolinomio_rapido(p, a, &fa, &fc);
-        calcPolinomio_rapido(p, c, &fc, &fb);
-        if (fa * fc < 0) {
-            b = c;
-        } else {
-            a = c;
+        calcPolinomio(p, xk, &fx, &dfx);
+        if (dfx == 0.0) break;
+        xk1 = xk - fx / dfx;
+        
+        if (criterioParada == 1) {
+            erro = fabs(xk1 - xk);
+        } else if (criterioParada == 2) {
+            erro = fabs(fx);
+        } else if (criterioParada == 3){
+            erro = fabs(xk1 - xk) / DBL_EPSILON;
         }
-        iter++;
-    } while (fabs(b - a) > 1e-6 && iter < 500);
-    *raiz = c;
-    *it = iter;
-    return fabs(fc);
+        
+        xk = xk1;
+        (*it)++;
+    } while (erro > EPS && *it < MAXIT);
+    *raiz = xk;
+    return erro;
 }
 
-real_t newtonRaphson(Polinomio p, real_t x0, int criterioParada, int *it, real_t *raiz) {
-    real_t xk = x0, fx, dfx;
-    int iter = 0;
+// Implementação do método da bissecção
+real_t bisseccao(Polinomio p, real_t a, real_t b, int criterioParada, int *it, real_t *raiz, CalcPolinomioFunc calcPolinomio) {
+    real_t fa, fb, fm, m, erro, temp;
+    *it = 0;
+    
+    calcPolinomio(p, a, &fa, &temp);
+    calcPolinomio(p, b, &fb, &temp);
+    if (fa * fb > 0) return -1;
+    
     do {
-        calcPolinomio_rapido(p, xk, &fx, &dfx);
-        if (fabs(dfx) < DBL_EPSILON) break;
-        xk -= fx / dfx;
-        iter++;
-    } while (fabs(fx) > DBL_EPSILON && iter < 500);
-    *raiz = xk;
-    *it = iter;
-    return fabs(fx);
+        m = (a + b) / 2.0;
+        calcPolinomio(p, m, &fm, &temp);
+        
+        
+        if (fa * fm < 0) {
+            b = m;
+            fb = fm;
+        } else {
+            a = m;
+            fa = fm;
+        }
+        
+        if (criterioParada == 1) {
+            erro = fabs(b - a);
+        } else if (criterioParada == 2) {
+            erro = fabs(fm);
+        } else if (criterioParada == 3) {
+            erro = fabs(b - a) / DBL_EPSILON;
+        }
+        
+        (*it)++;
+    } while (erro > EPS && *it < MAXIT);
+    
+    *raiz = m;
+    return erro;
 }
